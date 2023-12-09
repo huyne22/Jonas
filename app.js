@@ -1,12 +1,15 @@
-const fs = require('fs');
-const express = require('express');
-const morgan =require('morgan');
+import fs from 'fs';
+import express from 'express';
+import morgan from 'morgan';
+import { router as userRouter } from './routes/userRouters.js';
+import { router as tourRouter } from './routes/tourRouters.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const userRouter = require('./routes/userRouters')
-const tourRouter = require('./routes/tourRouters');
 
 const app = express();
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 //1, Middleware
 app.use(express.json())
 
@@ -25,7 +28,7 @@ app.use((req,res,next) => {
 })
 
 //3,Routes
-app.use('/api/v1/users', userRouter)
-app.use('/api/v1/tours', tourRouter)
+app.use('/api/v1/users', userRouter);
+app.use('/api/v1/tours', tourRouter);
 
-module.exports = app;
+export{app};
