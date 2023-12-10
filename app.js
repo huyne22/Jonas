@@ -14,14 +14,10 @@ const __dirname = dirname(__filename);
 app.use(express.json())
 
 app.use(express.static(`${__dirname}/public`));
-if(process.env.NODE_ENV === "development"){
+if(!process.env.NODE_ENV === "development"){
   app.use(morgan('dev'));
 }
 
-app.use((req,res,next) => {
-  console.log("Hello word!!!");
-  next();
-})
 app.use((req,res,next) => {
   req.requestTime = new Date().toISOString();
   next();
