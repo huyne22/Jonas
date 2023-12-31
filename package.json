@@ -5,9 +5,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "set:prod": "set NODE_ENV=production && nodemon server.js",
-    "set:dev": "set NODE_ENV=development && nodemon server.js"
+    "start": "nodemon server.js",
+    "start:prod": "SET NODE_ENV=production&& nodemon server.js",
+    "start:debug": "node --inspect server.js"
   },
   "repository": {
     "type": "git",

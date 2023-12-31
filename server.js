@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' })
+import {app} from './app.js';
 
 const DB = process.env.MONGO.replace('<password>', process.env.PASS_MONGO);
-mongoose.connect(DB, {
+ mongoose.connect(DB, {
   useNewUrlParser:true,
   useCreateIndex:true,
   useFindAndModify:false,
@@ -11,11 +12,9 @@ mongoose.connect(DB, {
 }).then(con => {
   console.log("DB connections success!")
 })
-
-
-// const app = require('./app');
-import {app} from './app.js';
 const port = process.env.PORT || 3004;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App running on port ${port}`);
 });
+
+
