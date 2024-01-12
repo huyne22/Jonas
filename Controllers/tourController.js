@@ -4,18 +4,19 @@ import { APIFeatures } from '../utils/apiFeatures.js';
 import {catchAsync} from '../utils/catchAsync.js';
 import {AppError} from '../utils/appError.js';
  
-
+//middleware used to setting default values before pass control to the next middleware 
   const aliasTopTours = catchAsync(async(req, res,next) =>{
     req.query.limit = '5';
     req.query.sort = '-ratingsAverage,price';
-    req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+    req.query.fields = 'name,price,ratingsAverage,summary,difficulty'; //specifies the fields in result
     next();
   })
+  //aggregates data based on difficulty and filter tour with an average rating of 4.5 or higher
   const getTourStats = catchAsync(async (req,res) => {
       const stats = await Tour.aggregate([
-        {$match: {ratingsAverage: {$gte: 4.5}}},
+        {$match: {ratingsAverage: {$gte: 4.5}}}, //filter data
         {
-          $group: {
+          $group: { //group data
             _id:'$difficulty',
             num:{$sum: 1},
             numRatings:{$sum: '$ratingsQuantity'},
@@ -24,7 +25,7 @@ import {AppError} from '../utils/appError.js';
             minPrice: {$min : '$price'},
             maxPrice: {$max : '$price'},
           }
-        },{
+        },{ //sort data
           $sort: { avgPrice: 1}
         }
         // {$match: {_id: {$ne: 'easy'}}}
@@ -36,6 +37,7 @@ import {AppError} from '../utils/appError.js';
         },
       });
   })
+  //based on the specified year to filter the data
   const getMonthlyPlan = catchAsync(async (req,res) => {
       const year = req.params.year * 1;
       const plan = await Tour.aggregate([
@@ -76,6 +78,7 @@ import {AppError} from '../utils/appError.js';
         },
       });
   })
+  //return all tours contained in the database
   const getAllTours = catchAsync(async(req, res,next) => {
     const features = new APIFeatures(Tour.find(), req.query)
     .filter()
