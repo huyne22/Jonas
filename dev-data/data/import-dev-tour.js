@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import fs from 'fs';
 import {Tour} from './../../models/tourModel.js';
+import {Review} from './../../models/reviewModel.js';
+import {User} from './../../models/userModel.js';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: './.env' });
@@ -22,12 +24,16 @@ mongoose.connect(DB, {
 })
 
 //Read file json
-const tour = JSON.parse(fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8'));
+const tour = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
+const user = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
+const review = JSON.parse(fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'));
 
 //Import data into DB
 const importData = async() => {
     try{
         await Tour.create(tour);
+        await User.create(user, {validateBeforeSave: false});
+        await Review.create(review);
         console.log("Data import success")
         
     }catch(err){
@@ -39,6 +45,8 @@ const importData = async() => {
 const deleteData = async() => {
     try{
         await Tour.deleteMany();
+        await User.deleteMany();
+        await Review.deleteMany();
         console.log("Data delete success!")
     }catch(err){
         console.log(err)
@@ -51,3 +59,4 @@ if(process.argv[2] === '--import'){
     deleteData();
 }
 console.log(process.argv)
+// node dev-data/data/import-dev-tour.js --delete

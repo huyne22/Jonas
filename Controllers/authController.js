@@ -5,12 +5,20 @@ import { sendEmail } from '../utils/email.js';
 import { catchAsync } from "../utils/catchAsync.js";
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken'
+//create jwt based on jwt
 const signToken = id => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN})
 }
+//call func create token and response token
 const createSendToken = (user,statusCode,res) => {
     const token = signToken(user._id)
-    
+    const cookieOptions = {
+        expiresIn: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true
+    }
+    if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+    res.cookie('jwt',token,cookieOptions)
+    user.password = undefined;
     res.status(statusCode).json({
         status: 'success',
         token,
@@ -19,6 +27,7 @@ const createSendToken = (user,statusCode,res) => {
         }
     })
 }
+//activity func signup with request have arguments
 const signup = catchAsync(async(req,res,next) => {
     const newUser = await User.create({
         name: req.body.name,
@@ -29,6 +38,7 @@ const signup = catchAsync(async(req,res,next) => {
     });
     createSendToken(newUser,201,res)
 })
+//activity func login with email and password
 const login = catchAsync(async(req,res,next) => {
     const {email,password} = req.body;
     //check if email and password exits

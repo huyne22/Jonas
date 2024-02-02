@@ -1,111 +1,174 @@
 import mongoose from 'mongoose';
 import slugify from 'slugify';
+// import {User} from './userModel.js'
 //cách 1
-const tourScheme = new mongoose.Schema({
-    name : {
+const tourSchema = new mongoose.Schema(
+  {
+    name: {
       type: String,
-      required:[true,'A tour must have a name'],
+      required: [true, 'A tour must have a name'],
       unique: true,
-      trim:true,
-      minlength: [10, 'Name must be at least 10 characters long'],
-      maxlength: [50, 'Name must be less than or equal to 50 characters'],
-    },
-    duration:{
-      type:Number,
-      required:[true,'A tour must have a duration']
+      trim: true,
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have more or equal then 10 characters']
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
     },
     slug: String,
-    maxGroupSize:{
-      type:Number,
-      required:[true,'A tour must have a group size']
+    duration: {
+      type: Number,
+      required: [true, 'A tour must have a duration']
     },
-    difficulty:{
-      type:String,
-      required:[true,'A tour must have a difficulty'],
+    maxGroupSize: {
+      type: Number,
+      required: [true, 'A tour must have a group size']
+    },
+    difficulty: {
+      type: String,
+      required: [true, 'A tour must have a difficulty'],
       enum: {
-        values: ['easy', 'moderate', 'challenging'],
-        message: 'Difficulty must be one of: easy, moderate, challenging'
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty is either: easy, medium, difficult'
       }
     },
-    ratingsAverage:{
-      type:Number,
+    ratingsAverage: {
+      type: Number,
       default: 4.5,
-      min: [1, 'Rating must be at least 1.0'],
-      max: [5, 'Rating must be at most 5.0'],
+      min: [1, 'Rating must be above 1.0'],
+      max: [5, 'Rating must be below 5.0'],
+      set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7
     },
-    ratingsQuantity:{
-      type:Number,
+    ratingsQuantity: {
+      type: Number,
       default: 0
     },
-    price:{
-      type:Number,
-      required:[true,'A tour must have a price']
+    price: {
+      type: Number,
+      required: [true, 'A tour must have a price']
     },
     priceDiscount: {
       type: Number,
       validate: {
-        validator: function(val){
-          //this only points to current doc on NEW document creation 
-          return this.price > val;
+        validator: function(val) {
+          // this only points to current doc on NEW document creation
+          return val < this.price;
         },
-        message:'Discount price ({VALUE}) should be less than the regular price'
-         //VALUE thay thế cho priceDiscount ở trong mongoose có hỗ trợ
+        message: 'Discount price ({VALUE}) should be below regular price'
       }
     },
-    summary:{
-      type:String,
-      trim:true,
-      required:[true,"A tour must have a summary"]
+    summary: {
+      type: String,
+      trim: true,
+      required: [true, 'A tour must have a description']
     },
-    description:{
-      type:String,
-      trim:true
+    description: {
+      type: String,
+      trim: true
     },
-    imageCover:{
-      type:String,
-      required:[true,"A tour must have a image"]
+    imageCover: {
+      type: String,
+      required: [true, 'A tour must have a cover image']
     },
-    images:[String],
-    createAt:{
-      type:Date,
-      default:Date.now(),
-      select:false
+    images: [String],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      select: false
     },
     startDates: [Date],
     secretTour: {
-      type:Boolean,
-      default:false
-    }
+      type: Boolean,
+      default: false
+    },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point']
+      },
+      coordinates: [Number],
+      address: String,
+      description: String
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+      }
+    ]
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
-  //virtual propeties
-  // {
-  //   toJSON:{virtuals: true},
-  //   toObject:{virtuals: true}
-  // }
-  )
-  // tourScheme.virtual('durationWeek').get(function(){
-  //   return this.duration / 7;
-  // })
+);
+
+  // tourSchema.index({ price: 1 });
+  tourSchema.index({ price: 1, ratingsAverage: -1 });
+  tourSchema.index({ slug: 1 });
+  tourSchema.index({ startLocation: '2dsphere' });
+
+  tourSchema.virtual('durationWeek').get(function(){
+    return this.duration / 7;
+  })
+
+  // Virtual populate
+  tourSchema.virtual('reviews', {
+    ref: 'Review',
+    localField: '_id', // Find tour where `localField`
+    foreignField: 'tour' // is equal to `foreignField`
+    //look for the _id of the tour in the tour field in review
+});
 
   //Document Middleware often use create
-  tourScheme.pre('save', function(next){
+  tourSchema.pre('save', function(next){
     this.slug = slugify(this.name, {lower:true});
     next()
   })
+
+  // tourSchema.pre('save',async function(next){
+  //   const guidesPromise = this.guides.map(async id => await User.findById(id))
+  //   this.guides = await Promise.all(guidesPromise)
+  //   next()
+  // })
   //Query Middleware
-  tourScheme.pre(/^find/, function(next){
+  tourSchema.pre(/^find/, function(next){
     this.find({ secretTour: {$ne: true}}) // loại trừ là $ne
     this.start = Date.now();
     next();
   })
-  tourScheme.post(/^find/, function(docs,next){
+  tourSchema.pre(/^find/, function(next){
+    this.populate({
+        path: 'guides',
+        select: 'name'
+    }).populate({
+      path: 'reviews',
+      select: '-_id'
+  })
+    next();
+  })
+ 
+  tourSchema.post(/^find/, function(docs,next){
     console.log(`Query took ${Date.now() - this.start} milliseconds!`)
     next();
   })
   //Aggregation Middleware
-  tourScheme.pre('aggregate', function(next){
+  tourSchema.pre('aggregate', function(next){
     this.pipeline().unshift({ $match: { secretTour: {$ne: true}}}) //loại bỏ trước khi tổng hợp
     next()
   })
-  const Tour = mongoose.model('Tour', tourScheme);
+  const Tour = mongoose.model('Tour', tourSchema);
   export { Tour };
