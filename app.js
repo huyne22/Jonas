@@ -3,25 +3,34 @@ import morgan from 'morgan';
 import { router as userRouter } from './routes/userRouters.js';
 import { router as tourRouter } from './routes/tourRouters.js';
 import { reviewRouter } from './routes/reviewRouters.js';
+import { viewRouter } from './routes/viewRoutes.js';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import path, { dirname } from 'path';
 import  {AppError}  from './utils/appError.js';
-import globalErrorHandle from './Controllers/errorController.js';
+import globalErrorHandler from './Controllers/errorController.js';
 import rateLimit from 'express-rate-limit'
 import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
 import xss from 'xss-clean'
 import hpp from 'hpp'
+import cookieParser from 'cookie-parser'
+
 const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 //1, Global middleware
+// Serving static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 //Set security HTTP headers
-app.use(helmet())
+app.use( helmet({ contentSecurityPolicy: false }) );
 
 //development logging
-if(!process.env.NODE_ENV === "development"){
+if(process.env.NODE_ENV === "development"){
   app.use(morgan('dev'));
 }
 
@@ -35,6 +44,8 @@ app.use('/api', limiter)
 
 //body parser,reading date from body into req.body  
 app.use(express.json({ limit: '10kb' }))
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
 
 //Data sanitization against NoSQL query injection 
 app.use(mongoSanitize())
@@ -53,21 +64,21 @@ app.use(hpp({
     'price'
   ]
 }))
-// Serving static files
-app.use(express.static(`${__dirname}/public`));
+
 
 //Test middleware
 app.use((req,res,next) => {
   req.requestTime = new Date().toISOString();
+  console.log(req.cookies)
   next();
 })
-
 //3,Routes
+app.use('/', viewRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/reviews', reviewRouter);
-app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`,404))
-});
-app.use(globalErrorHandle);
+// app.all('*', (req, res, next) => {
+//   next(new AppError(`Can't find ${req.originalUrl} on this server!`,404))
+// });
+app.use(globalErrorHandler);
 export{app};

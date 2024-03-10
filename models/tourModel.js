@@ -166,9 +166,9 @@ const tourSchema = new mongoose.Schema(
     next();
   })
   //Aggregation Middleware
-  tourSchema.pre('aggregate', function(next){
-    this.pipeline().unshift({ $match: { secretTour: {$ne: true}}}) //loại bỏ trước khi tổng hợp
-    next()
-  })
+  // tourSchema.pre('aggregate', function(next){
+  //   this.pipeline().unshift({ $match: { secretTour: {$ne: true}}}) //loại bỏ trước khi tổng hợp
+  //   next()
+  // })
   const Tour = mongoose.model('Tour', tourSchema);
   export { Tour };
