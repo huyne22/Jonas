@@ -5,7 +5,8 @@ import {
     getTour,
     updateTour,
     createTour,
-    deleteTour,getTourStats,getMonthlyPlan,getToursWithin,getDistances} from '../Controllers/tourController.js';
+    deleteTour,getTourStats,getMonthlyPlan,getToursWithin,getDistances,
+    uploadTourImage,resizeTourImage} from '../Controllers/tourController.js';
 import {protect,restrictTo} from "../Controllers/authController.js";
 import {reviewRouter} from "./reviewRouters.js";
 
@@ -26,7 +27,7 @@ router.route('/')
     .post(protect,restrictTo('admin', 'lead-guide'),createTour)
 router.route('/:id')
     .get(getTour)
-    .patch(protect,restrictTo('admin', 'lead-guide'),updateTour)
+    .patch(protect,restrictTo('admin', 'lead-guide'),uploadTourImage,resizeTourImage,updateTour)
     .delete(protect,restrictTo('admin','lead-guide'),deleteTour)
 // router.route('/:tourId/review').post(protect,restrictTo('user'),setTourUserIds,createReview)
 

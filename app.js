@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import { router as userRouter } from './routes/userRouters.js';
 import { router as tourRouter } from './routes/tourRouters.js';
 import { reviewRouter } from './routes/reviewRouters.js';
+import { bookingRouter } from './routes/bookingRouters.js';
 import { viewRouter } from './routes/viewRoutes.js';
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
@@ -69,7 +70,7 @@ app.use(hpp({
 //Test middleware
 app.use((req,res,next) => {
   req.requestTime = new Date().toISOString();
-  console.log(req.cookies)
+  // console.log(req.cookies)
   next();
 })
 //3,Routes
@@ -77,6 +78,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 // app.all('*', (req, res, next) => {
 //   next(new AppError(`Can't find ${req.originalUrl} on this server!`,404))
 // });

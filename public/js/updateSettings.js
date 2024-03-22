@@ -15,7 +15,7 @@ export const updateSettings = async (data, type) => {
       url,
       data
     });
-    console.log("data", res.data.status)
+    // console.log("data", res.data.status)
     if (res.data.status === 'success') {
       showAlert('success', `${type.toUpperCase()} updated successfully!`);
     }
