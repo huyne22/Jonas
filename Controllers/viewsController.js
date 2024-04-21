@@ -2,6 +2,7 @@ import { AppError } from '../utils/appError.js';
 import { catchAsync } from "../utils/catchAsync.js";
 import {User} from '../models/userModel.js';
 import {Tour} from '../models/tourModel.js';
+import {Booking} from '../models/bookingModel.js';
 
 const getOverview = catchAsync(async (req, res, next) => {
   // 1) Get tour data from collection
@@ -38,12 +39,29 @@ const getLoginForm = (req, res) => {
     title: 'Log into your account'
   });
 };
+const getSignupForm = (req, res) => {
+  res.status(200).render('signup', {
+    title: 'Signup into your account'
+  });
+};
 
 const getAccount = (req, res) => {
   res.status(200).render('account', {
     title: 'Your account'
   });
 };
+
+const getMyTour = catchAsync(async (req, res, next) => {
+    // 1,Find all bookings
+    const bookings = await Booking.find({user: req.user.id})
+    // 2,Find tours with the returned IDs 
+    const tourIDs = bookings.map(el => el.tour)
+    const tours = await Tour.find({_id : { $in : tourIDs}})
+    return res.status(200).render('overview',{
+      title: 'My tours',
+      tours
+    })
+})
 
 const updateUserData = catchAsync(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(
@@ -66,5 +84,7 @@ const updateUserData = catchAsync(async (req, res, next) => {
 export { getOverview,
     getTour,
     getLoginForm,
+    getSignupForm,
     getAccount,
-    updateUserData };
+    updateUserData,
+    getMyTour };

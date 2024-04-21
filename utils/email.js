@@ -47,13 +47,7 @@ export default class Email {
           text: htmlToText.fromString(html)
         };
 
-        await this.newTransport().sendMail(mailOptions, (err) => {
-            if (err) {
-                console.log(err)
-            }
-            // If the email is sent successfully
-            return res.status(200).json({ message: 'Email sent successfully' });
-        });
+        await this.newTransport().sendMail(mailOptions);
     }
     async sendWelcome() {
         await this.send('welcome', 'Welcome to the Natours Family!');

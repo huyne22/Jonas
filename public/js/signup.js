@@ -18,7 +18,7 @@ export const signup = async (name, email, password, passwordConfirm) => {
     if (res.data.status === "success") {
       showAlert("success", "signed up in successfully!");
       window.setTimeout(() => {
-        location.assign("/");
+        location.assign("http://127.0.0.1:3004/login");
       }, 1000);
     }
   } catch (err) {

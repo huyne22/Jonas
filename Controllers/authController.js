@@ -36,7 +36,7 @@ const signup = catchAsync(async(req,res,next) => {
         passwordConfirm: req.body.passwordConfirm,
         role: req.body.role
     });
-    const url = `${req.protocol}://${req.get('host')}/me`;
+    const url = `${req.protocol}://${req.get('host')}/signup`;
     console.log(url);
     console.log(newUser);
     await new Email(newUser, url).sendWelcome();
